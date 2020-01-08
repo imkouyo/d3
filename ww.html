@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="survey-container">
+
+</div>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.15.0/d3.min.js"></script>
+<script>
+    let margin = {
+        'top': 20,
+        'bottom' : 100,
+        'left': 200,
+        'right': 20
+    };
+    let width = 600;
+    let height = 400;
+    let colorSet = d3.scaleOrdinal([
+        'rgba(255, 99, 132, .8)',
+        'rgba(54, 162, 235, .8)',
+        'rgba(255, 206, 86, .8)',
+        'rgba(75, 192, 192, .8)',
+        'rgba(153, 102, 255, .8)',
+        'rgba(255, 159, 64, .8)'
+    ]);
+    let dataSet = [];
+    let maxSubOption;
+    let svg = d3.select('#survey-container')
+        .append("svg")
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append("g");
+    let g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    let y0 = d3.scaleBand()
+        .rangeRound([0, height])
+        .paddingInner(0.1);
+    let y1 = d3.scaleBand()
+        .padding(0.05);
+
+    let x = d3.scaleLinear();
+
+    let tip = d3.tip();
+
+    console.log(colorSet(1));
+
+    d3.json('data.json').then(function (data) {
+        dataSet = data['questions'];
+        y0.domain(dataSet.map(d => d['question']));
+        let max = 0;
+        dataSet.forEach(d => {
+            if (max < d['content'].length) {
+                maxSubOption = d['content'];
+                max = d['content'].length;
+            }
+        });
+        console.log(maxSubOption);
+        y1.domain(maxSubOption.map(d => d['text'])).rangeRound([0, y0.bandwidth()]);
+        x.domain([0, d3.max(dataSet, function (question) {
+            return d3.max(question['content'], function(content) {
+                return +content['counts'];
+            } )
+        })])
+            .range([0, width]);
+        console.log(d3.max(dataSet, function (question) {
+            return d3.max(question['content'], function(content) {
+                return +content['counts'];
+            } )
+        }));
+        g.append("g")
+            .selectAll("g")
+            .data(dataSet)
+            .enter().append("g")
+            .attr("class","bar")
+            .attr("transform", function(d) { return "translate( 0,"+ y0(d['question'])+")"})
+            .selectAll("rect")
+            .data(function(d) {
+                return d['content'].map(function(question) {
+                    return {key: question.text, value: question['counts']};
+                });
+            })
+            .enter().append("rect")
+            .attr("y", function(d) { return y1(d.key); })
+            .attr("x", 0)
+            .attr("height", y1.bandwidth())
+            .attr("width", function(d) {
+                return x(d.value);
+            })
+            .attr("fill", function (d) {
+                return colorSet(d.key)
+            });
+        g.append("g")
+            .attr("class", "axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        g.append("g")
+            .attr("class", "y axis")
+            .call(d3.axisLeft(y0))
+    });
+
+
+    // d3.json('data.json').then(data=> {
+    //     console.log(data)
+    //     for(let i = 0; i < data.options; i++) {
+    //         dataSet = data['questions'].map(function (item) {
+    //             return item;
+    //         });
+    //     }
+    //     let x = d3.scaleLinear().domain([0, d3.max(dataSet, function (question) {
+    //         return d3.max(question['content'], function(content) {
+    //             return +content['counts'];
+    //         } )
+    //     })])
+    //     .range([0, 600]);
+    //     let y = d3.scaleBand().domain(dataSet.map(item => item['question']))
+    //     .range([0, 400]);
+    //
+    //
+    //     let xAxis = d3.axisBottom(x);
+    //
+    //     let yAxis = d3.axisLeft(y);
+    //     svg.append('g')
+    //         .attr("transform", "translate(0," + 400 +")")
+    //         .call(xAxis);
+    //     svg.append('g')
+    //     .call(yAxis);
+    //
+    //
+    //     let rects = svg.selectAll("g")
+    //         .data(dataSet);
+    //
+    //     rects.enter()
+    //         .append("g")
+    //         .attr('class', 'www')
+    //
+    //         // .attr("x", function(d){ return x(d.month) })
+    //         // .attr("height", function(d){ return height - y(d.revenue); })
+    //         // .attr("width", x.bandwidth)
+    //         // .attr("fill", "grey");
+    //
+    // })
+</script>
+
+
+<!--<script>-->
+
+<!--    var margin = {top: 20, right: 20, bottom: 30, left: 40},-->
+<!--        width = 960 - margin.left - margin.right,-->
+<!--        height = 500 - margin.top - margin.bottom;-->
+
+<!--    var x0 = d3.scale.ordinal()-->
+<!--        .rangeRoundBands([0, width], .1);-->
+
+<!--    var x1 = d3.scale.ordinal();-->
+
+<!--    var y = d3.scale.linear()-->
+<!--        .range([height, 0]);-->
+
+<!--    var xAxis = d3.svg.axis()-->
+<!--        .scale(x0)-->
+<!--        .tickSize(0)-->
+<!--        .orient("bottom");-->
+
+<!--    var yAxis = d3.svg.axis()-->
+<!--        .scale(y)-->
+<!--        .orient("left");-->
+
+<!--    var color = d3.scale.ordinal()-->
+<!--        .range(["#ca0020","#f4a582","#d5d5d5","#92c5de","#0571b0"]);-->
+
+<!--    var svg = d3.select('body').append("svg")-->
+<!--        .attr("width", width + margin.left + margin.right)-->
+<!--        .attr("height", height + margin.top + margin.bottom)-->
+<!--        .append("g")-->
+<!--        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");-->
+
+<!--    d3.json("data.json", function(error, data) {-->
+
+<!--        var categoriesNames = data.map(function(d) { return d.categorie; });-->
+<!--        var rateNames = data[0].values.map(function(d) { return d.rate; });-->
+
+<!--        x0.domain(categoriesNames);-->
+<!--        x1.domain(rateNames).rangeRoundBands([0, x0.rangeBand()]);-->
+<!--        y.domain([0, d3.max(data, function(categorie) { return d3.max(categorie.values, function(d) { return d.value; }); })]);-->
+
+<!--        svg.append("g")-->
+<!--            .attr("class", "x axis")-->
+<!--            .attr("transform", "translate(0," + height + ")")-->
+<!--            .call(xAxis);-->
+
+<!--        svg.append("g")-->
+<!--            .attr("class", "y axis")-->
+<!--            .style('opacity','0')-->
+<!--            .call(yAxis)-->
+<!--            .append("text")-->
+<!--            .attr("transform", "rotate(-90)")-->
+<!--            .attr("y", 6)-->
+<!--            .attr("dy", ".71em")-->
+<!--            .style("text-anchor", "end")-->
+<!--            .style('font-weight','bold')-->
+<!--            .text("Value");-->
+
+<!--        svg.select('.y').transition().duration(500).delay(1300).style('opacity','1');-->
+
+<!--        var slice = svg.selectAll(".slice")-->
+<!--            .data(data)-->
+<!--            .enter().append("g")-->
+<!--            .attr("class", "g")-->
+<!--            .attr("transform",function(d) { return "translate(" + x0(d.categorie) + ",0)"; });-->
+
+<!--        slice.selectAll("rect")-->
+<!--            .data(function(d) { return d.values; })-->
+<!--            .enter().append("rect")-->
+<!--            .attr("width", x1.rangeBand())-->
+<!--            .attr("x", function(d) { return x1(d.rate); })-->
+<!--            .style("fill", function(d) { return color(d.rate) })-->
+<!--            .attr("y", function(d) { return y(0); })-->
+<!--            .attr("height", function(d) { return height - y(0); })-->
+<!--            .on("mouseover", function(d) {-->
+<!--                d3.select(this).style("fill", d3.rgb(color(d.rate)).darker(2));-->
+<!--            })-->
+<!--            .on("mouseout", function(d) {-->
+<!--                d3.select(this).style("fill", color(d.rate));-->
+<!--            });-->
+
+<!--        slice.selectAll("rect")-->
+<!--            .transition()-->
+<!--            .delay(function (d) {return Math.random()*1000;})-->
+<!--            .duration(1000)-->
+<!--            .attr("y", function(d) { return y(d.value); })-->
+<!--            .attr("height", function(d) { return height - y(d.value); });-->
+
+<!--        //Legend-->
+<!--        var legend = svg.selectAll(".legend")-->
+<!--            .data(data[0].values.map(function(d) { return d.rate; }).reverse())-->
+<!--            .enter().append("g")-->
+<!--            .attr("class", "legend")-->
+<!--            .attr("transform", function(d,i) { return "translate(0," + i * 20 + ")"; })-->
+<!--            .style("opacity","0");-->
+
+<!--        legend.append("rect")-->
+<!--            .attr("x", width - 18)-->
+<!--            .attr("width", 18)-->
+<!--            .attr("height", 18)-->
+<!--            .style("fill", function(d) { return color(d); });-->
+
+<!--        legend.append("text")-->
+<!--            .attr("x", width - 24)-->
+<!--            .attr("y", 9)-->
+<!--            .attr("dy", ".35em")-->
+<!--            .style("text-anchor", "end")-->
+<!--            .text(function(d) {return d; });-->
+
+<!--        legend.transition().duration(500).delay(function(d,i){ return 1300 + 100 * i; }).style("opacity","1");-->
+
+<!--    });-->
+
+<!--</script>-->
+
+
+</body>
+</html>
